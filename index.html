@@ -25,12 +25,12 @@
   <div>
     <input type="number" id="amount" placeholder="amount">
     
-    <select id="tipo">
+    <select id="type">
       <option value="ingreso">Ingreso</option>
       <option value="gasto">Gasto</option>
     </select>
 
-    <select id="categoria">
+    <select id="category">
       <option value="alimentos">Alimentos</option>
       <option value="impuestos">Impuestos</option>
       <option value="extras">Extras</option>
@@ -46,17 +46,17 @@
     <p>Ingresos: $<span id="ingresos">0</span></p>
     <p>Gastos: $<span id="gastos">0</span></p>
     <p><strong>Balance: $<span id="balance">0</span></strong></p>
-    <p>Ingresos Globales: $<span id="ingresosGlobal">0</span></p>
-    <p>Gastos Globales: $<span id="gastosGlobal">0</span></p>
+    <p>Ingresos Globales: $<span id="totalIncome">0</span></p>
+    <p>Gastos Globales: $<span id="totalExpenses">0</span></p>
     <p><strong>Balance Global: $<span id="balanceGlobal">0</span></strong></p>
     <h2>📋 Transactions</h2>
   </div>
 
   <div>
 
-    <h3>Filtrar por Categoria</h3>
+    <h3>Filtrar por category</h3>
 
-    <select id="filtroCategoria" onchange="render()">
+    <select id="categoryFilter" onchange="render()">
       <option value="todas">Todas</option>
       <option value="alimentos">Alimentos</option>
       <option value="impuestos">Impuestos</option>
@@ -65,7 +65,7 @@
       <option value="transporte">Transporte</option>
     </select>
 
-    <select id="filtroTipo" onchange="render()">
+    <select id="typeFilter" onchange="render()">
       <option value="todos">Todos</option>
       <option value="ingreso">Ingresos</option>
       <option value="gasto">Gastos</option>
@@ -81,10 +81,10 @@
     function agregarMovimiento() {
       console.log("VALOR INPUT:", document.getElementById("amount").value);
       const amount = parseFloat(document.getElementById("amount").value);
-      const tipo = document.getElementById("tipo").value;
-      const categoria = document.getElementById("categoria").value;
+      const type = document.getElementById("type").value;
+      const category = document.getElementById("category").value;
 
-      if (!amount || !categoria) {
+      if (!amount || !category) {
         alert("Completá los datos");
         return;
       }
@@ -92,116 +92,121 @@
       const movimiento = {
         id: Date.now(),
         amount,
-        tipo,
-        categoria
+        type,
+        category
       };
 
       transactions.push(movimiento);
       document.getElementById("amount").value = "";
 
       render();
-      guardarDatos();
+      saveData();
     }
 
     function eliminarMovimiento(id) {
       console.log("CLICK", id);
       transactions = transactions.filter(mov => mov.id !== id);
 
-      guardarDatos();
+      saveData();
       render();
     }
 
     function render() {
       console.log("render ejecutado");
       
-      const filtro = document.getElementById("filtroCategoria").value;
+      const filtro = document.getElementById("categoryFilter").value;
       console.log("filtro", filtro)
-      const filtroTipo = document.getElementById("filtroTipo").value;
-      console.log("TIPO:", filtroTipo);
-      console.log("filtroTipo:", filtroTipo);
+      const typeFilter = document.getElementById("typeFilter").value;
+      console.log("type:", typeFilter);
+      console.log("typeFilter:", typeFilter);
       const lista = document.getElementById("lista");
       lista.innerHTML = "";
 
-      let ingresosGlobal = 0;
-      let gastosGlobal = 0;
-      let ingresosFiltrados = 0;
-      let gastosFiltrados = 0;
+      let totalIncome = 0;
+      let totalExpenses = 0;
+      let filteredIncome = 0;
+      let filteredExpenses = 0;
 
       let movimientosFiltrados = transactions;
 
       if (filtro !== "todas") {
-        movimientosFiltrados = transactions.filter(mov => mov.categoria === filtro);
+        movimientosFiltrados = transactions.filter(mov => mov.category === filtro);
       }
-      if (filtroTipo !== "todos") {
-        movimientosFiltrados = movimientosFiltrados.filter(mov => mov.tipo === filtroTipo);
+      if (typeFilter !== "todos") {
+        movimientosFiltrados = movimientosFiltrados.filter(mov => mov.type === typeFilter);
       }
 
       transactions.forEach(mov => {
-        if (mov.tipo === "ingreso") {
-          ingresosGlobal += mov.amount;
+        if (mov.type === "ingreso") {
+          totalIncome += mov.amount;
         } else {
-          gastosGlobal += mov.amount;
+          totalExpenses += mov.amount;
         }
       });
 
       movimientosFiltrados.forEach(mov => {
         console.log("MOV:", mov);
+        console.log("TYPE:", mov.type);
         const li = document.createElement("li");
         li.innerHTML = `
-          ${mov.tipo} - $${mov.amount} (${mov.categoria})
+          ${mov.type} - $${mov.amount} (${mov.category})
           <button onclick="eliminarMovimiento(${mov.id})">❌</button>
         `;
-        li.className = mov.tipo;
+        li.className = mov.type;
 
         lista.appendChild(li);
 
-        if (mov.tipo === "ingreso") {
-          ingresosFiltrados += mov.amount;
+        if (mov.type === "ingreso") {
+          filteredIncome += mov.amount;
         } else {
-          gastosFiltrados += mov.amount;
+          filteredExpenses += mov.amount;
         }
       });
 
-      document.getElementById("ingresos").textContent = ingresosFiltrados;
-      document.getElementById("gastos").textContent = gastosFiltrados;
-      document.getElementById("balance").textContent = ingresosFiltrados - gastosFiltrados;
-      document.getElementById("ingresosGlobal").textContent = ingresosGlobal;
-      document.getElementById("gastosGlobal").textContent = gastosGlobal;
-      document.getElementById("balanceGlobal").textContent = ingresosGlobal - gastosGlobal;
+      document.getElementById("ingresos").textContent = filteredIncome;
+      document.getElementById("gastos").textContent = filteredExpenses;
+      document.getElementById("balance").textContent = filteredIncome - filteredExpenses;
+      document.getElementById("totalIncome").textContent = totalIncome;
+      document.getElementById("totalExpenses").textContent = totalExpenses;
+      document.getElementById("balanceGlobal").textContent = totalIncome - totalExpenses;
     };
 
-    function guardarDatos(){
+    function saveData(){
       localStorage.setItem("movimientos", JSON.stringify(transactions));
     };
 
-    function cargarDatos() {
-      const datos = localStorage.getItem("movimientos");
+    function loadData() {
+      const data = localStorage.getItem("movimientos");
       console.log("CARGADOS:", transactions);
 
-      if (datos) {
-        transactions = JSON.parse(datos);
+      if (data) {
+        transactions = JSON.parse(data);
         transactions = transactions.map(mov => {
-          if (!mov.id) {
-            return {
-              ...mov,
-              id: Date.now() + Math.random()
-            };
-          };
+          let updatedTransaction = {...mov};
 
           if (mov.monto && !mov.amount) {
-            return {
-              ...mov,
-              amount: mov.monto
-            };
+            updatedTransaction.amount = mov.monto;
           }
-        
-          return mov;
+
+          if (mov.tipo && !mov.type) {
+            updatedTransaction.type = mov.tipo;
+          }
+
+          if (mov.categoria && !mov.category) {
+            updatedTransaction.category = mov.categoria;
+          }
+
+          if (!mov.id) {
+            updatedTransaction.id = Date.now() + Math.random();
+          }
+          
+          return updatedTransaction;
         });
       };
     };
     
     
-    cargarDatos();
+    loadData();
     render();
 
   </script>
