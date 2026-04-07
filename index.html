@@ -45,6 +45,9 @@
   <p>Ingresos: $<span id="ingresos">0</span></p>
   <p>Gastos: $<span id="gastos">0</span></p>
   <p><strong>Balance: $<span id="balance">0</span></strong></p>
+  <p>Ingresos Globales: $<span id="ingresosGlobal">0</span></p>
+  <p>Gastos Globales: $<span id="gastosGlobal">0</span></p>
+  <p><strong>Balance Global: $<span id="balanceGlobal">0</span></strong></p>
 
   <h2>📋 Movimientos</h2>
 
@@ -105,14 +108,24 @@
       const lista = document.getElementById("lista");
       lista.innerHTML = "";
 
-      let ingresos = 0;
-      let gastos = 0;
+      let ingresosGlobal = 0;
+      let gastosGlobal = 0;
+      let ingresosFiltrados = 0;
+      let gastosFiltrados = 0;
 
       let movimientosFiltrados = movimientos;
 
       if (filtro !== "todas") {
         movimientosFiltrados = movimientos.filter(mov => mov.categoria === filtro);
       }
+
+      movimientos.forEach(mov => {
+        if (mov.tipo === "ingreso") {
+          ingresosGlobal += mov.monto;
+        } else {
+          gastosGlobal += mov.monto;
+        }
+      });
 
       movimientosFiltrados.forEach(mov => {
         const li = document.createElement("li");
@@ -125,20 +138,23 @@
         lista.appendChild(li);
 
         if (mov.tipo === "ingreso") {
-          ingresos += mov.monto;
+          ingresosFiltrados += mov.monto;
         } else {
-          gastos += mov.monto;
+          gastosFiltrados += mov.monto;
         }
       });
 
-      document.getElementById("ingresos").textContent = ingresos;
-      document.getElementById("gastos").textContent = gastos;
-      document.getElementById("balance").textContent = ingresos - gastos;
-    }
+      document.getElementById("ingresos").textContent = ingresosFiltrados;
+      document.getElementById("gastos").textContent = gastosFiltrados;
+      document.getElementById("balance").textContent = ingresosFiltrados - gastosFiltrados;
+      document.getElementById("ingresosGlobal").textContent = ingresosGlobal;
+      document.getElementById("gastosGlobal").textContent = gastosGlobal;
+      document.getElementById("balanceGlobal").textContent = ingresosGlobal - gastosGlobal;
+    };
 
     function guardarDatos(){
       localStorage.setItem("movimientos", JSON.stringify(movimientos));
-    }
+    };
 
     function cargarDatos() {
       const datos = localStorage.getItem("movimientos");
@@ -151,11 +167,11 @@
               ...mov,
               id: Date.now() + Math.random()
             };
-          }
+          };
           return mov;
         });
-      }
-    }
+      };
+    };
     
     
     cargarDatos();
