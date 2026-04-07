@@ -41,17 +41,19 @@
     <button onclick="agregarMovimiento()">Agregar</button>
   </div>
 
+  <div>
   <h2>📊 Totales</h2>
-  <p>Ingresos: $<span id="ingresos">0</span></p>
-  <p>Gastos: $<span id="gastos">0</span></p>
-  <p><strong>Balance: $<span id="balance">0</span></strong></p>
-  <p>Ingresos Globales: $<span id="ingresosGlobal">0</span></p>
-  <p>Gastos Globales: $<span id="gastosGlobal">0</span></p>
-  <p><strong>Balance Global: $<span id="balanceGlobal">0</span></strong></p>
-
-  <h2>📋 Movimientos</h2>
+    <p>Ingresos: $<span id="ingresos">0</span></p>
+    <p>Gastos: $<span id="gastos">0</span></p>
+    <p><strong>Balance: $<span id="balance">0</span></strong></p>
+    <p>Ingresos Globales: $<span id="ingresosGlobal">0</span></p>
+    <p>Gastos Globales: $<span id="gastosGlobal">0</span></p>
+    <p><strong>Balance Global: $<span id="balanceGlobal">0</span></strong></p>
+    <h2>📋 Movimientos</h2>
+  </div>
 
   <div>
+
     <h3>Filtrar por Categoria</h3>
 
     <select id="filtroCategoria" onchange="render()">
@@ -62,7 +64,15 @@
       <option value="ocio">Ocio</option>
       <option value="transporte">Transporte</option>
     </select>
+
+    <select id="filtroTipo" onchange="render()">
+      <option value="todos">Todos</option>
+      <option value="ingreso">Ingresos</option>
+      <option value="gasto">Gastos</option>
+    </select>
+
   </div>  
+
   <ul id="lista"></ul>
 
   <script>
@@ -105,6 +115,9 @@
       
       const filtro = document.getElementById("filtroCategoria").value;
       console.log("filtro", filtro)
+      const filtroTipo = document.getElementById("filtroTipo").value;
+      console.log("TIPO:", filtroTipo);
+      console.log("filtroTipo:", filtroTipo);
       const lista = document.getElementById("lista");
       lista.innerHTML = "";
 
@@ -117,6 +130,9 @@
 
       if (filtro !== "todas") {
         movimientosFiltrados = movimientos.filter(mov => mov.categoria === filtro);
+      }
+      if (filtroTipo !== "todos") {
+        movimientosFiltrados = movimientosFiltrados.filter(mov => mov.tipo === filtroTipo);
       }
 
       movimientos.forEach(mov => {
