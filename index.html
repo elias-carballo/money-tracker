@@ -23,7 +23,7 @@
   <h1>💸 Mi Dinero</h1>
 
   <div>
-    <input type="number" id="monto" placeholder="Monto">
+    <input type="number" id="amount" placeholder="amount">
     
     <select id="tipo">
       <option value="ingreso">Ingreso</option>
@@ -49,7 +49,7 @@
     <p>Ingresos Globales: $<span id="ingresosGlobal">0</span></p>
     <p>Gastos Globales: $<span id="gastosGlobal">0</span></p>
     <p><strong>Balance Global: $<span id="balanceGlobal">0</span></strong></p>
-    <h2>📋 Movimientos</h2>
+    <h2>📋 Transactions</h2>
   </div>
 
   <div>
@@ -76,27 +76,28 @@
   <ul id="lista"></ul>
 
   <script>
-    let movimientos = [];
+    let transactions = [];
 
     function agregarMovimiento() {
-      const monto = parseFloat(document.getElementById("monto").value);
+      console.log("VALOR INPUT:", document.getElementById("amount").value);
+      const amount = parseFloat(document.getElementById("amount").value);
       const tipo = document.getElementById("tipo").value;
       const categoria = document.getElementById("categoria").value;
 
-      if (!monto || !categoria) {
+      if (!amount || !categoria) {
         alert("Completá los datos");
         return;
       }
 
       const movimiento = {
         id: Date.now(),
-        monto,
+        amount,
         tipo,
         categoria
       };
 
-      movimientos.push(movimiento);
-      document.getElementById("monto").value = "";
+      transactions.push(movimiento);
+      document.getElementById("amount").value = "";
 
       render();
       guardarDatos();
@@ -104,7 +105,7 @@
 
     function eliminarMovimiento(id) {
       console.log("CLICK", id);
-      movimientos = movimientos.filter(mov => mov.id !== id);
+      transactions = transactions.filter(mov => mov.id !== id);
 
       guardarDatos();
       render();
@@ -126,27 +127,28 @@
       let ingresosFiltrados = 0;
       let gastosFiltrados = 0;
 
-      let movimientosFiltrados = movimientos;
+      let movimientosFiltrados = transactions;
 
       if (filtro !== "todas") {
-        movimientosFiltrados = movimientos.filter(mov => mov.categoria === filtro);
+        movimientosFiltrados = transactions.filter(mov => mov.categoria === filtro);
       }
       if (filtroTipo !== "todos") {
         movimientosFiltrados = movimientosFiltrados.filter(mov => mov.tipo === filtroTipo);
       }
 
-      movimientos.forEach(mov => {
+      transactions.forEach(mov => {
         if (mov.tipo === "ingreso") {
-          ingresosGlobal += mov.monto;
+          ingresosGlobal += mov.amount;
         } else {
-          gastosGlobal += mov.monto;
+          gastosGlobal += mov.amount;
         }
       });
 
       movimientosFiltrados.forEach(mov => {
+        console.log("MOV:", mov);
         const li = document.createElement("li");
         li.innerHTML = `
-          ${mov.tipo} - $${mov.monto} (${mov.categoria})
+          ${mov.tipo} - $${mov.amount} (${mov.categoria})
           <button onclick="eliminarMovimiento(${mov.id})">❌</button>
         `;
         li.className = mov.tipo;
@@ -154,9 +156,9 @@
         lista.appendChild(li);
 
         if (mov.tipo === "ingreso") {
-          ingresosFiltrados += mov.monto;
+          ingresosFiltrados += mov.amount;
         } else {
-          gastosFiltrados += mov.monto;
+          gastosFiltrados += mov.amount;
         }
       });
 
@@ -169,21 +171,30 @@
     };
 
     function guardarDatos(){
-      localStorage.setItem("movimientos", JSON.stringify(movimientos));
+      localStorage.setItem("movimientos", JSON.stringify(transactions));
     };
 
     function cargarDatos() {
       const datos = localStorage.getItem("movimientos");
+      console.log("CARGADOS:", transactions);
 
       if (datos) {
-        movimientos = JSON.parse(datos);
-        movimientos = movimientos.map(mov => {
+        transactions = JSON.parse(datos);
+        transactions = transactions.map(mov => {
           if (!mov.id) {
             return {
               ...mov,
               id: Date.now() + Math.random()
             };
           };
+
+          if (mov.monto && !mov.amount) {
+            return {
+              ...mov,
+              amount: mov.monto
+            };
+          }
+        
           return mov;
         });
       };
