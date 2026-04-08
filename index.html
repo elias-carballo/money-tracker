@@ -77,9 +77,9 @@
 
   <script>
     let transactions = [];
+    let editingId = null;
 
     function agregarMovimiento() {
-      console.log("VALOR INPUT:", document.getElementById("amount").value);
       const amount = parseFloat(document.getElementById("amount").value);
       const type = document.getElementById("type").value;
       const category = document.getElementById("category").value;
@@ -89,7 +89,15 @@
         return;
       }
 
-      const movimiento = {
+      if (editingId) {
+        transactions = transactions.map(mov =>
+          mov.id === editingId
+          ? {...mov, amount, type, category}
+          : mov
+        );
+        editingId = null;
+      } else {
+        const movimiento = {
         id: Date.now(),
         amount,
         type,
@@ -97,19 +105,34 @@
       };
 
       transactions.push(movimiento);
+        
+      }
+
+
       document.getElementById("amount").value = "";
 
       render();
       saveData();
     }
 
-    function eliminarMovimiento(id) {
+    function deleteTransaction(id) {
       console.log("CLICK", id);
       transactions = transactions.filter(mov => mov.id !== id);
 
       saveData();
       render();
     }
+
+    function editTransaction(id) {
+      const transaction = transactions.find(t => t.id === id);
+
+      document.getElementById("amount").value = transaction.amount;
+      document.getElementById("type").value = transaction.type;
+      document.getElementById("category").value = transaction.category;
+
+      editingId = id;
+      console.log("FOUND", transaction);
+    };
 
     function render() {
       console.log("render ejecutado");
@@ -150,7 +173,8 @@
         const li = document.createElement("li");
         li.innerHTML = `
           ${mov.type} - $${mov.amount} (${mov.category})
-          <button onclick="eliminarMovimiento(${mov.id})">❌</button>
+          <button onclick="editTransaction(${mov.id})">✏️</button>
+          <button onclick="deleteTransaction(${mov.id})">❌</button>
         `;
         li.className = mov.type;
 
