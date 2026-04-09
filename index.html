@@ -167,26 +167,49 @@
         }
       });
 
+      const grupos = {};
+
       movimientosFiltrados.forEach(mov => {
-        console.log("MOV:", mov);
-        console.log("TYPE:", mov.type);
-        const li = document.createElement("li");
-        li.innerHTML = `
-          ${mov.type} - $${mov.amount} (${mov.category})
-          <button onclick="editTransaction(${mov.id})">✏️</button>
-          <button onclick="deleteTransaction(${mov.id})">❌</button>
-        `;
-        li.className = mov.type;
+        const fecha = mov.fecha ? new Date(mov.fecha) : new Date();
+        const año = fecha.getFullYear();
+        const mes = (fecha.getMonth() + 1).toString().padStart(2, "0");
 
-        lista.appendChild(li);
+        const clave =  año + "-" + mes;
 
-        if (mov.type === "ingreso") {
-          filteredIncome += mov.amount;
-        } else {
-          filteredExpenses += mov.amount;
+        console.log("FECHA", mov.fecha)
+        if (!grupos[clave]) {
+          grupos[clave] = [];
         }
+
+        grupos[clave].push(mov);
       });
 
+      for (let clave in grupos) {
+
+        const titulo = document.createElement("h3");
+        titulo.textContent = clave;
+        lista.appendChild(titulo);
+
+    
+        grupos[clave].forEach(mov => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+            ${mov.type} - $${mov.amount} (${mov.category})
+            <button onclick="editTransaction(${mov.id})">✏️</button>
+            <button onclick="deleteTransaction(${mov.id})">❌</button>
+          `;
+          li.className = mov.type;
+
+          lista.appendChild(li);
+
+          if (mov.type === "ingreso") {
+            filteredIncome += mov.amount;
+          } else {
+            filteredExpenses += mov.amount;
+          }
+        });
+      }
+    
       document.getElementById("ingresos").textContent = filteredIncome;
       document.getElementById("gastos").textContent = filteredExpenses;
       document.getElementById("balance").textContent = filteredIncome - filteredExpenses;
