@@ -85,40 +85,42 @@
       const category = document.getElementById("category").value;
 
       if (!amount || !category) {
+      
         alert("Completá los datos");
         return;
       }
 
       if (editingId) {
+      
         transactions = transactions.map(mov =>
           mov.id === editingId
           ? {...mov, amount, type, category}
           : mov
         );
         editingId = null;
+      
       } else {
+      
         const movimiento = {
         id: Date.now(),
         amount,
         type,
-        category
+        category,
+        fecha: Date.now()
+        };
+        transactions.push(movimiento);
+        
       };
 
-      transactions.push(movimiento);
-        
-      }
-
-
       document.getElementById("amount").value = "";
-
-      render();
+      
       saveData();
-    }
+      render();
+    };
 
     function deleteTransaction(id) {
-      console.log("CLICK", id);
+      //console.log("CLICK", id);
       transactions = transactions.filter(mov => mov.id !== id);
-
       saveData();
       render();
     }
@@ -131,52 +133,56 @@
       document.getElementById("category").value = transaction.category;
 
       editingId = id;
-      console.log("FOUND", transaction);
-    };
-
-    function render() {
-      console.log("render ejecutado");
       
+    }
+
+    function getFilteredTransactions(){
       const filtro = document.getElementById("categoryFilter").value;
-      console.log("filtro", filtro)
+      //console.log("filtro", filtro)
       const typeFilter = document.getElementById("typeFilter").value;
-      console.log("type:", typeFilter);
-      console.log("typeFilter:", typeFilter);
-      const lista = document.getElementById("lista");
-      lista.innerHTML = "";
-
-      let totalIncome = 0;
-      let totalExpenses = 0;
-      let filteredIncome = 0;
-      let filteredExpenses = 0;
-
-      let movimientosFiltrados = transactions;
+      //console.log("type:", typeFilter);
+      //console.log("typeFilter:", typeFilter);
+      let resultado = transactions;
 
       if (filtro !== "todas") {
-        movimientosFiltrados = transactions.filter(mov => mov.category === filtro);
+        resultado = resultado.filter(mov => mov.category === filtro);
       }
       if (typeFilter !== "todos") {
-        movimientosFiltrados = movimientosFiltrados.filter(mov => mov.type === typeFilter);
+        resultado = resultado.filter(mov => mov.type === typeFilter);
       }
+      return resultado;
+    };
 
-      transactions.forEach(mov => {
+    function calculateTotals(lista) {
+      let income = 0;
+      let expenses = 0;
+
+      lista.forEach(mov => {
         if (mov.type === "ingreso") {
-          totalIncome += mov.amount;
+          income += mov.amount;
         } else {
-          totalExpenses += mov.amount;
+          expenses += mov.amount;
         }
       });
 
+      return {
+        income,
+        expenses,
+        balance: income - expenses
+      };
+    }
+
+    function groupByMonth(lista) {
       const grupos = {};
 
-      movimientosFiltrados.forEach(mov => {
+      lista.forEach(mov => {
         const fecha = mov.fecha ? new Date(mov.fecha) : new Date();
         const año = fecha.getFullYear();
         const mes = (fecha.getMonth() + 1).toString().padStart(2, "0");
 
         const clave =  año + "-" + mes;
 
-        console.log("FECHA", mov.fecha)
+       // console.log("FECHA", mov.fecha)
         if (!grupos[clave]) {
           grupos[clave] = [];
         }
@@ -184,13 +190,26 @@
         grupos[clave].push(mov);
       });
 
-      for (let clave in grupos) {
+      return grupos;
+    };
 
+    function render() {
+      //console.log("render ejecutado");
+      const lista = document.getElementById("lista");
+      lista.innerHTML = "";
+      
+      const filtrados = getFilteredTransactions();
+      
+      const globalTotals = calculateTotals(transactions);
+      const filteredTotals = calculateTotals(filtrados);
+
+      const grupos = groupByMonth(filtrados);
+
+      for (let clave in grupos) {
         const titulo = document.createElement("h3");
         titulo.textContent = clave;
         lista.appendChild(titulo);
 
-    
         grupos[clave].forEach(mov => {
           const li = document.createElement("li");
           li.innerHTML = `
@@ -201,21 +220,17 @@
           li.className = mov.type;
 
           lista.appendChild(li);
-
-          if (mov.type === "ingreso") {
-            filteredIncome += mov.amount;
-          } else {
-            filteredExpenses += mov.amount;
-          }
         });
       }
-    
-      document.getElementById("ingresos").textContent = filteredIncome;
-      document.getElementById("gastos").textContent = filteredExpenses;
-      document.getElementById("balance").textContent = filteredIncome - filteredExpenses;
-      document.getElementById("totalIncome").textContent = totalIncome;
-      document.getElementById("totalExpenses").textContent = totalExpenses;
-      document.getElementById("balanceGlobal").textContent = totalIncome - totalExpenses;
+
+      document.getElementById("ingresos").textContent = filteredTotals.income;
+      document.getElementById("gastos").textContent = filteredTotals.expenses;
+      document.getElementById("balance").textContent = filteredTotals.balance;
+
+      document.getElementById("totalIncome").textContent = globalTotals.income;
+      document.getElementById("totalExpenses").textContent = globalTotals.expenses;
+      document.getElementById("balanceGlobal").textContent = globalTotals.balance;
+      
     };
 
     function saveData(){
@@ -224,10 +239,11 @@
 
     function loadData() {
       const data = localStorage.getItem("movimientos");
-      console.log("CARGADOS:", transactions);
+      //console.log("CARGADOS:", transactions);
 
       if (data) {
         transactions = JSON.parse(data);
+
         transactions = transactions.map(mov => {
           let updatedTransaction = {...mov};
 
@@ -247,10 +263,14 @@
             updatedTransaction.id = Date.now() + Math.random();
           }
           
+          if (!mov.fecha) {
+            updatedTransaction.fecha = Date.now();
+          }
+          
           return updatedTransaction;
         });
-      };
-    };
+      }
+    }
     
     
     loadData();
