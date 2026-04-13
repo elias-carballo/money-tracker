@@ -16,8 +16,19 @@
     }
     .ingreso { color: green; }
     .gasto { color: red; }
+    .filters {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 10px;
+    }
+    .filters div {
+      display:flex;
+      flex-direction: column;
+    }
   </style>
+
 </head>
+
 <body>
 
   <h1>💸 Mi Dinero</h1>
@@ -56,26 +67,31 @@
 
     <h3>Filtrar por category</h3>
 
+    <label>Type</label>
+    <select id="typeFilter" onchange="render()">
+       <option value="todos">Todos</option>
+       <option value="ingreso">Ingresos</option>
+       <option value="gasto">Gastos</option>
+    </select>
+  </div>
+
+  <div>
+    <label>Category</label>
     <select id="categoryFilter" onchange="render()">
-      <option value="todas">Todas</option>
-      <option value="alimentos">Alimentos</option>
-      <option value="impuestos">Impuestos</option>
-      <option value="extras">Extras</option>
-      <option value="ocio">Ocio</option>
-      <option value="transporte">Transporte</option>
+     
     </select>
 
-    <select id="typeFilter" onchange="render()">
-      <option value="todos">Todos</option>
-      <option value="ingreso">Ingresos</option>
-      <option value="gasto">Gastos</option>
-    </select>
+    
 
   </div>  
 
   <ul id="lista"></ul>
 
   <script>
+    const categories = {
+      ingreso: ["salario", "regalo", "extra"],
+      gasto: ["comida", "transporte", "servicios", "ocio", "extra"]
+    };
     let transactions = [];
     var editingId = null;
 
@@ -123,6 +139,18 @@
       transactions = transactions.filter(mov => mov.id !== id);
       saveData();
       render();
+    }
+
+    function updateCategoryOptions(type){
+      const categorySelect = document.getElementById("category");
+      categorySelect.innerHTML = "";
+
+      categories[type].forEach(cat => {
+        const option = document.createElement("option");
+        option.value = cat;
+        option.textContent = cat;
+        categorySelect.appendChild(option);
+      });
     }
 
     function editTransaction(id) {
@@ -193,6 +221,35 @@
       return grupos;
     };
 
+    function updateFilterCategories(type) {
+      console.log("UPDATING FILTER CATEGORIES WITH: ", type);
+      const categoryFilter = document.getElementById("categoryFilter");
+      categoryFilter.innerHTML = "";
+
+      const defaultOption = document.createElement("option");
+      defaultOption.value = "todas";
+      defaultOption.textContent = "Todas";
+      categoryFilter.appendChild(defaultOption);
+
+      if (type === "todos") {
+      const allCategories = [...categories.ingreso, ...categories.gasto];
+
+      allCategories.forEach(cat => {
+        const option = document.createElement("option");
+        option.value = cat;
+        option.textContent = cat;
+        categoryFilter.appendChild(option);
+      });
+      } else {
+        categories[type].forEach(cat => {
+        const option = document.createElement("option");
+        option.value = cat;
+        option.textContent = cat;
+        categoryFilter.appendChild(option);
+      });
+  }
+}
+
     function render() {
       //console.log("render ejecutado");
       const lista = document.getElementById("lista");
@@ -205,9 +262,15 @@
 
       const grupos = groupByMonth(filtrados);
 
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = (now.getMonth() + 1).toString().padStart(2, "0");
+      const currentKey = currentYear + "-" + currentMonth;
+
       for (let clave in grupos) {
         const titulo = document.createElement("h3");
-        titulo.textContent = clave;
+        const isCurrentMonth = clave === currentKey;
+        titulo.textContent = (isCurrentMonth ? "▼ " : "▶ ") + clave;
         titulo.style.cursor = "pointer";
         lista.appendChild(titulo);
 
@@ -215,10 +278,16 @@
         titulo.onclick = () => {
           if (container.style.display === "none") {
             container.style.display = "block";
+            titulo.textContent = "▼ " + clave;
           } else {
             container.style.display = "none";
+            titulo.textContent = "▶ " + clave;
           }
         };
+
+        if (clave !== currentKey) {
+          container.style.display = "none";
+        }
 
         grupos[clave].forEach(mov => {
           const li = document.createElement("li");
@@ -234,6 +303,8 @@
 
         lista.appendChild(container);
       }
+
+      
 
       document.getElementById("ingresos").textContent = filteredTotals.income;
       document.getElementById("gastos").textContent = filteredTotals.expenses;
@@ -279,11 +350,35 @@
             updatedTransaction.fecha = Date.now();
           }
           
+          if (updatedTransaction.category === "alimentos") {
+            updatedTransaction.category = "comida";
+          }
+
+          if (updatedTransaction.category === "impuestos") {
+              updatedTransaction.category = "servicios";
+          }
+
+          if (updatedTransaction.category === "extras") {
+              updatedTransaction.category = "extra";
+          }
+
+
           return updatedTransaction;
         });
       }
     }
+
+   
+
+    document.getElementById("typeFilter").addEventListener("change", (e) => {
+      console.log("TYPE FILTER VALUE:", e.target.value);
+      updateFilterCategories(e.target.value);
+    });
+
     
+
+    updateFilterCategories("todos");
+    updateCategoryOptions(document.getElementById("type").value);
     
     loadData();
     render();
