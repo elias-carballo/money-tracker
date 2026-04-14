@@ -165,6 +165,10 @@
     }
 
     function getFilteredTransactions(){
+      console.log("FILTER STATE:", {
+        type: document.getElementById("typeFilter").value,
+        category: document.getElementById("categoryFilter").value
+      });
       const filtro = document.getElementById("categoryFilter").value;
       //console.log("filtro", filtro)
       const typeFilter = document.getElementById("typeFilter").value;
@@ -372,15 +376,17 @@
 
     document.getElementById("typeFilter").addEventListener("change", (e) => {
       console.log("TYPE FILTER VALUE:", e.target.value);
-      updateFilterCategories(e.target.value);
+      const type = e.target.value;
+      document.getElementById("categoryFilter").value = "todas";
+      updateFilterCategories(type);
+      render()
     });
 
     
 
-    updateFilterCategories("todos");
-    
     
     loadData();
+    updateFilterCategories("todos");
     render();
     
     document.getElementById("type").addEventListener("change", (e) => {
