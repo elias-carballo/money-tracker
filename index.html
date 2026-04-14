@@ -232,23 +232,23 @@
       categoryFilter.appendChild(defaultOption);
 
       if (type === "todos") {
-      const allCategories = [...categories.ingreso, ...categories.gasto];
+        const allCategories = [...new Set([...categories.ingreso, ...categories.gasto])];
 
-      allCategories.forEach(cat => {
-        const option = document.createElement("option");
-        option.value = cat;
-        option.textContent = cat;
-        categoryFilter.appendChild(option);
-      });
+        allCategories.forEach(cat => {
+          const option = document.createElement("option");
+          option.value = cat;
+          option.textContent = cat;
+          categoryFilter.appendChild(option);
+        });
       } else {
         categories[type].forEach(cat => {
         const option = document.createElement("option");
         option.value = cat;
         option.textContent = cat;
         categoryFilter.appendChild(option);
-      });
-  }
-}
+        });
+      }
+    } 
 
     function render() {
       //console.log("render ejecutado");
@@ -378,10 +378,15 @@
     
 
     updateFilterCategories("todos");
-    updateCategoryOptions(document.getElementById("type").value);
+    
     
     loadData();
     render();
+    
+    document.getElementById("type").addEventListener("change", (e) => {
+      updateCategoryOptions(e.target.value);
+    });
+    updateCategoryOptions(document.getElementById("type").value);
 
   </script>
 
